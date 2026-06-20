@@ -51,3 +51,16 @@ Before custom feature work, create a topic branch:
 git switch -c workbench/chroma-key
 ```
 
+## Local Launch
+
+Use the workbench launch script instead of upstream `scripts/dev.sh`:
+
+```bash
+./scripts/workbench-dev.sh
+```
+
+Why:
+
+- Upstream `scripts/dev.sh` uses `--fast`, which expects Palmier's Developer ID certificate.
+- The workbench script signs ad-hoc with `SIGNING_IDENTITY=-`.
+- It injects placeholder backend values so local editor-only work can launch without Palmier private credentials.
