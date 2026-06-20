@@ -12,6 +12,7 @@ struct Options {
     var similarity = 0.34
     var softness = 0.12
     var despill = 0.65
+    var backgroundColor: SIMD3<Double>?
 }
 
 enum ChromaKeyError: LocalizedError {
@@ -28,7 +29,7 @@ enum ChromaKeyError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .usage:
-            "Usage: WorkbenchChromaKey --input in.mp4 --output keyed.mov [--key-rgb 0,0.78,0] [--similarity 0.34] [--softness 0.12] [--despill 0.65]"
+            "Usage: WorkbenchChromaKey --input in.mp4 --output keyed.mov [--key-rgb 0,0.78,0] [--similarity 0.34] [--softness 0.12] [--despill 0.65] [--background-rgb 0.95,0.95,0.95]"
         case .invalidOption(let message): message
         case .noVideoTrack: "No video track found"
         case .cannotCreateMetalDevice: "Could not create a Metal device"
@@ -67,7 +68,7 @@ final class CounterBox: @unchecked Sendable {
 }
 
 let kernelSource = """
-kernel vec4 chromaKey(__sample image, vec3 keyColor, float similarity, float softness, float despill) {
+kernel vec4 chromaKey(__sample image, vec3 keyColor, float similarity, float softness, float despill, vec4 background) {
     vec3 rgb = clamp(image.rgb, 0.0, 1.0);
     float greenExcess = rgb.g - max(rgb.r, rgb.b);
     float alpha = 1.0 - smoothstep(similarity - softness, similarity + softness, greenExcess);
@@ -76,6 +77,9 @@ kernel vec4 chromaKey(__sample image, vec3 keyColor, float similarity, float sof
     float edgeDespill = (1.0 - alpha) + 0.35;
     rgb.g = max(0.0, rgb.g - greenExcess * despill * edgeDespill);
 
+    if (background.a > 0.5) {
+        return vec4(mix(background.rgb, rgb, alpha), 1.0);
+    }
     return vec4(rgb, image.a * alpha);
 }
 """
@@ -100,6 +104,7 @@ enum WorkbenchChromaKey {
         var similarity = 0.34
         var softness = 0.12
         var despill = 0.65
+        var backgroundColor: SIMD3<Double>?
 
         var index = 0
         while index < args.count {
@@ -119,6 +124,8 @@ enum WorkbenchChromaKey {
                 softness = try parseUnit(value, name: flag)
             case "--despill":
                 despill = try parseUnit(value, name: flag)
+            case "--background-rgb":
+                backgroundColor = try parseRGB(value)
             default:
                 throw ChromaKeyError.invalidOption("Unknown option: \(flag)")
             }
@@ -132,7 +139,8 @@ enum WorkbenchChromaKey {
             keyColor: keyColor,
             similarity: similarity,
             softness: softness,
-            despill: despill
+            despill: despill,
+            backgroundColor: backgroundColor
         )
     }
 
@@ -218,6 +226,12 @@ enum WorkbenchChromaKey {
         let queue = DispatchQueue(label: "io.palmier.workbench.chroma-key")
         let started = Date()
         let totalSeconds = duration.seconds.isFinite ? duration.seconds : 0
+        let backgroundVector = CIVector(
+            x: options.backgroundColor?.x ?? 0,
+            y: options.backgroundColor?.y ?? 0,
+            z: options.backgroundColor?.z ?? 0,
+            w: options.backgroundColor == nil ? 0 : 1
+        )
 
         try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
             let completion = CompletionBox()
@@ -259,6 +273,7 @@ enum WorkbenchChromaKey {
                             Float(options.similarity),
                             Float(options.softness),
                             Float(options.despill),
+                            backgroundVector,
                         ]
                     ) else {
                         resume(.failure(ChromaKeyError.invalidOption("Could not apply chroma key kernel")))

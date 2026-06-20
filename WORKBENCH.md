@@ -75,14 +75,16 @@ swift run WorkbenchChromaKey \
   --output /absolute/keyed.mov \
   --similarity 0.16 \
   --softness 0.08 \
-  --despill 0.35
+  --despill 0.35 \
+  --background-rgb 0.94,0.94,0.92
 ```
 
-It reads video frames with AVFoundation, applies a Core Image chroma-key kernel using a Metal-backed `CIContext`, and writes ProRes 4444 with alpha.
+It reads video frames with AVFoundation, applies a Core Image chroma-key kernel using a Metal-backed `CIContext`, and writes ProRes 4444. Omit `--background-rgb` to preserve alpha; pass it to bake an opaque background for editors that preview alpha as black.
 
 Current status:
 
 - Fast on M4-class Apple Silicon.
 - Useful as a keyed-copy workflow: import the `.mov` into Palmier and place it above the original/raw audio.
 - First tuned Krutika pass: `1-raw-keyed-gpu-v3.mov`.
+- First baked-background Krutika pass: `1-raw-keyed-gpu-v4-light.mov`.
 - Still needs better hair/edge matte cleanup before this becomes the final green-screen solution.
