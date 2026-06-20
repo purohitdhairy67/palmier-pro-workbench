@@ -1,0 +1,53 @@
+# Palmier Pro Workbench
+
+This fork is for our private video-editing workflow.
+It is not intended to become a general-purpose editor fork or an upstream contribution stream.
+
+## Goals
+
+- Keep upstream Palmier Pro easy to fetch and merge.
+- Add only features that directly help our story-editing workflow.
+- Prefer MCP-exposed editor actions when they save repeated manual work.
+- Keep custom changes small, isolated, and documented.
+
+## Near-Term Feature Ideas
+
+- Green-screen/chroma-key workflow for Krutika-style talking-head footage.
+- Background replacement presets for story videos.
+- Fast story labels: name tags, arrows, location tags, quote bubbles, court/document stamps.
+- Project presets for vertical story videos.
+- MCP tools that expose our repeated editing gestures.
+
+## What Not To Do
+
+- Do not rebuild a general editor roadmap.
+- Do not fork or replace Palmier's generative AI backend.
+- Do not make broad refactors unless needed for a feature.
+- Do not remove upstream behavior just because we do not need it yet.
+
+## Upstream Sync
+
+Remotes:
+
+- `origin` - our GitHub fork.
+- `upstream` - `https://github.com/palmier-io/palmier-pro.git`.
+
+Keep custom work on `workbench/*` branches.
+Fetch upstream regularly and merge or rebase intentionally.
+
+Useful commands:
+
+```bash
+git fetch upstream
+git switch main
+git merge upstream/main
+git switch workbench/main
+git merge main
+```
+
+Before custom feature work, create a topic branch:
+
+```bash
+git switch -c workbench/chroma-key
+```
+
