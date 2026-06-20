@@ -7,6 +7,7 @@ let package = Package(
     platforms: [.macOS(.v26)],
     products: [
         .executable(name: "PalmierPro", targets: ["PalmierPro"]),
+        .executable(name: "WorkbenchChromaKey", targets: ["WorkbenchChromaKey"]),
     ],
     dependencies: [
         .package(url: "https://github.com/dmrschmidt/DSWaveformImage", from: "14.2.2"),
@@ -51,6 +52,10 @@ let package = Package(
             name: "PalmierProTests",
             dependencies: ["PalmierPro"],
             path: "Tests/PalmierProTests"
+        ),
+        .executableTarget(
+            name: "WorkbenchChromaKey",
+            path: "Sources/WorkbenchChromaKey"
         ),
     ]
 )
